@@ -4,7 +4,7 @@ const express = require("express");
 const connectDB = require("./connectDB");
 const Book = require('./models/Books');
 const multer = require("multer");
-
+const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 8000;
 
@@ -13,6 +13,7 @@ app.use(cors());
 app.use(express.urlencoded( { extended: true } ));
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
+app.use(express.static("public"));
 
 // Get All Books
 app.get("/api/books", async (req, res) => {
@@ -70,8 +71,8 @@ const upload = multer({ storage: storage })
 
 app.post("/api/books", upload.single("thumbnail")  ,async (req, res) => {
   try {
-    console.log(req.body);
-    console.log(req.file);
+    console.log('body1',req.body);
+    console.log("file",req.file);
 
     const newBook = new Book({
       title: req.body.title,
@@ -82,9 +83,12 @@ app.post("/api/books", upload.single("thumbnail")  ,async (req, res) => {
       thumbnail: req.file.filename,
     })
 
-    await Book.create(newBook);
+    await Book.create(newBook).then(()=>{
+      console.log("success")
+    });
     res.json("Data Submitted");
   } catch (error) {
+    console.log("Error 1")
     res.status(500).json({ error: "An error occurred while fetching books." });
   }
 });
@@ -147,12 +151,10 @@ app.delete("/api/books/:id", async(req,res) => {
 //   }
 // });
 
-app.get("/", (req, res) => {
-  res.json("Hello mate!");
-});
 
-app.get("*", (req, res) => {
-  res.sendStatus("404");
+app.get("/*", (req, res) => {
+  console.log("hi");
+  res.sendFile(path.join(__dirname,"public","index.html"));
 });
 
 app.listen(PORT, ()=> {
